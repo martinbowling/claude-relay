@@ -1,0 +1,38 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "claude-relay",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-11-19",
+	"compatibility_flags": ["nodejs_compat"],
+	"observability": { "enabled": true },
+	"upload_source_maps": true,
+	"vars": {
+		// Container size for each session. See Cloudflare's instance types.
+		"INSTANCE": "standard-1",
+		// Optional model override for cloud turns, e.g. "claude-sonnet-5-5". Empty = account default.
+		"MODEL": ""
+	},
+	"secrets": {
+		// ADMIN_TOKEN: the bootstrap login. GITHUB_TOKEN (optional) lets the cloud clone and push.
+		"required": ["ADMIN_TOKEN"]
+	},
+	"containers": [
+		{
+			"class_name": "SessionDO",
+			"scheduling_policy": "durable_object",
+			"images": {
+				"agent": { "dockerfile": "./Dockerfile" }
+			}
+		}
+	],
+	"durable_objects": {
+		"bindings": [
+			{ "class_name": "SessionDO", "name": "SESSION" },
+			{ "class_name": "RegistryDO", "name": "REGISTRY" }
+		]
+	},
+	"exports": {
+		"SessionDO": { "type": "durable-object", "storage": "sqlite" },
+		"RegistryDO": { "type": "durable-object", "storage": "sqlite" }
+	}
+}
